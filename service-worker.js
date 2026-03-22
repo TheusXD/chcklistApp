@@ -1,0 +1,128 @@
+const CACHE_NAME = 'checklist-campo-v2';
+const STATIC_ASSETS = [
+  './',
+  './index.html',
+  './styles.css',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './js/db.js',
+  './js/state.js',
+  './js/geo.js',
+  './js/photos.js',
+  './js/sync.js',
+  './js/history.js',
+  './js/pdf.js',
+  './js/ui.js',
+  './js/app.js'
+];
+
+const CDN_ASSETS = [
+  'https://unpkg.com/dexie@4.0.11/dist/dexie.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js'
+];
+
+// Install — pre-cache static assets + CDN
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll([...STATIC_ASSETS, ...CDN_ASSETS]))
+      .then(() => self.skipWaiting())
+  );
+});
+
+// Activate — clean old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Fetch — strategy per resource type
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') return;
+
+  // HTML — Network First
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // CSS & JS — Cache First
+  if (request.destination === 'style' || request.destination === 'script' ||
+      url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Images — Stale While Revalidate
+  if (request.destination === 'image' || url.pathname.match(/\.(png|jpg|jpeg|svg|webp|gif|ico)$/)) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // Fonts — Cache First
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // CDN — Cache First
+  if (url.hostname === 'unpkg.com' || url.hostname === 'cdnjs.cloudflare.com') {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Default — Network First
+  event.respondWith(networkFirst(request));
+});
+
+// ===== STRATEGIES =====
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    return cached || caches.match('./index.html');
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const networkPromise = fetch(request).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  }).catch(() => null);
+
+  return cached || await networkPromise || new Response('Offline', { status: 503 });
+}

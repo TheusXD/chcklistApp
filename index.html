@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Checklist de campo para equipes de saneamento. Controle de materiais para ligação e reparo de esgoto.">
+  <meta name="theme-color" content="#0D47A1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Checklist de Campo - Saneamento</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- ===== HEADER FIXO ===== -->
+  <header class="app-header" id="app-header">
+    <div class="header-top">
+      <div class="header-brand">
+        <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4" />
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+        </svg>
+        <h1>Checklist de Campo</h1>
+      </div>
+      <div class="header-right">
+        <span id="sync-badge" class="sync-badge hidden">0</span>
+        <div class="header-status" id="status-badge">
+          <span class="status-dot"></span>
+          <span class="status-text">Online</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-date" id="header-date"></div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-text" id="progress-text">0/0 (0%)</div>
+  </header>
+
+  <!-- ===== TABS DE ATIVIDADE ===== -->
+  <nav class="tabs-nav" id="tabs-nav">
+    <!-- Rendered dynamically by UI.renderTabs() -->
+  </nav>
+
+  <!-- ===== VIEW: CHECKLIST (principal) ===== -->
+  <main class="view active" id="view-checklist">
+    <div class="main-content" id="checklist-content">
+      <!-- Rendered dynamically by UI.renderChecklist() -->
+    </div>
+
+    <!-- Footer actions -->
+    <div class="footer-actions">
+      <div class="footer-row">
+        <button class="btn-action btn-export" id="btn-export-pdf">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          Exportar PDF
+        </button>
+        <button class="btn-action btn-new-day" id="btn-new-day">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M1 4v6h6M23 20v-6h-6" />
+            <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
+          </svg>
+          Novo Dia
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== VIEW: HISTÓRICO ===== -->
+  <section class="view" id="view-history">
+    <!-- Rendered dynamically by HistoryView -->
+  </section>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bottom-nav">
+    <button class="bottom-nav-btn active" data-view="checklist">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+      </svg>
+      <span>Checklist</span>
+    </button>
+    <button class="bottom-nav-btn" data-view="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+      <span>Histórico</span>
+    </button>
+  </nav>
+
+  <!-- ===== MODAL: ADICIONAR ITEM ===== -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal-add-item">
+      <div class="modal-header">
+        <h2 id="modal-title">Adicionar Material</h2>
+        <button class="modal-close" id="modal-close" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form id="form-add-item" autocomplete="off">
+        <div class="form-group">
+          <label for="input-item-name">Nome do Material *</label>
+          <input type="text" id="input-item-name" placeholder="Ex: Luva de Redução" required>
+        </div>
+        <div class="form-group">
+          <label for="input-item-qty">Quantidade / Detalhe <span class="optional">(opcional)</span></label>
+          <input type="text" id="input-item-qty" placeholder="Ex: 5 unidades, 100mm">
+        </div>
+        <input type="hidden" id="input-item-activity">
+        <button type="submit" class="btn-save">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+          Salvar Material
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: NOVA ATIVIDADE ===== -->
+  <div class="modal-overlay" id="modal-activity-overlay">
+    <div class="modal" id="modal-add-activity">
+      <div class="modal-header">
+        <h2>Nova Atividade</h2>
+        <button class="modal-close" id="modal-activity-close" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form id="form-add-activity" autocomplete="off">
+        <div class="form-group">
+          <label for="input-activity-name">Nome da Atividade *</label>
+          <input type="text" id="input-activity-name" placeholder="Ex: Manutenção de Poço" required>
+        </div>
+        <button type="submit" class="btn-save">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+          Criar Atividade
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== SCRIPTS ===== -->
+  <!-- CDN Dependencies -->
+  <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- App Modules (order matters) -->
+  <script src="js/db.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/geo.js"></script>
+  <script src="js/photos.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
