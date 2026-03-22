@@ -1,4 +1,4 @@
-const CACHE_NAME = 'checklist-campo-v2';
+const CACHE_NAME = 'checklist-campo-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -14,6 +14,9 @@ const STATIC_ASSETS = [
   './js/history.js',
   './js/pdf.js',
   './js/ui.js',
+  './js/templates.js',
+  './js/signature.js',
+  './js/share.js',
   './js/app.js'
 ];
 
@@ -23,12 +26,27 @@ const CDN_ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js'
 ];
 
-// Install — pre-cache static assets + CDN
+// Install — pre-cache static assets (critical) + CDN assets (optional)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll([...STATIC_ASSETS, ...CDN_ASSETS]))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Static assets are critical — must all succeed
+      await cache.addAll(STATIC_ASSETS);
+
+      // CDN assets are optional — individual failures don't break install
+      const cdnResults = await Promise.allSettled(
+        CDN_ASSETS.map(url =>
+          fetch(url).then(res => {
+            if (res.ok) cache.put(url, res);
+          })
+        )
+      );
+
+      const failed = cdnResults.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.warn('[SW] CDN assets não cacheados:', failed.length);
+      }
+    }).then(() => self.skipWaiting())
   );
 });
 

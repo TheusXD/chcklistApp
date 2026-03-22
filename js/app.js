@@ -1,5 +1,6 @@
 /**
  * app.js — Entry Point, Router & Global Events
+ * v3: Added header height fix, skeleton, templates, signature, share, notifications
  */
 
 const App = {
@@ -18,6 +19,10 @@ const App = {
 
       // Set date
       this._setDate();
+
+      // Fix 1.3: Dynamic header height
+      this._updateHeaderHeight();
+      window.addEventListener('resize', () => this._updateHeaderHeight());
 
       // Online/offline status
       this._updateStatus();
@@ -39,12 +44,22 @@ const App = {
       // Auto-capture geolocation
       GeoService.capture();
 
+      // Initialize signature canvas
+      SignatureService.init();
+
+      // Schedule notification reminder (Feature 4)
+      this._scheduleReminder();
+
       // Register service worker
       this._registerSW();
+
+      // Fix 1.5: Remove skeleton after init
+      document.getElementById('skeleton-loader')?.remove();
 
       console.log('[App] Initialized successfully');
     } catch (e) {
       console.error('[App] Init error:', e);
+      document.getElementById('skeleton-loader')?.remove();
     }
   },
 
@@ -52,6 +67,14 @@ const App = {
   _setDate() {
     const el = document.getElementById('header-date');
     if (el) el.textContent = appState.todayFormatted;
+  },
+
+  // ===== FIX 1.3: DYNAMIC HEADER HEIGHT =====
+  _updateHeaderHeight() {
+    const header = document.getElementById('app-header');
+    if (!header) return;
+    const height = header.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--header-height', height + 'px');
   },
 
   // ===== ONLINE STATUS =====
@@ -76,7 +99,11 @@ const App = {
 
     if (hash === '#history' || hash.startsWith('#history/')) {
       historyView?.classList.add('active');
-      navBtns.forEach(b => b.classList.toggle('active', b.dataset.view === 'history'));
+      navBtns.forEach(b => {
+        b.classList.toggle('active', b.dataset.view === 'history');
+        b.removeAttribute('aria-current');
+        if (b.dataset.view === 'history') b.setAttribute('aria-current', 'page');
+      });
 
       if (hash.startsWith('#history/')) {
         const date = hash.replace('#history/', '');
@@ -86,7 +113,11 @@ const App = {
       }
     } else {
       mainView?.classList.add('active');
-      navBtns.forEach(b => b.classList.toggle('active', b.dataset.view === 'checklist'));
+      navBtns.forEach(b => {
+        b.classList.toggle('active', b.dataset.view === 'checklist');
+        b.removeAttribute('aria-current');
+        if (b.dataset.view === 'checklist') b.setAttribute('aria-current', 'page');
+      });
       UI.renderTabs();
       UI.renderChecklist();
     }
@@ -112,16 +143,45 @@ const App = {
       }
     });
 
-    // Export PDF
+    // Export PDF → opens signature modal first
     document.getElementById('btn-export-pdf')?.addEventListener('click', async () => {
-      this.showToast('Gerando PDF...');
-      try {
-        await PdfService.exportChecklist();
-        this.showToast('PDF gerado!');
-      } catch (e) {
-        console.error('[PDF] Error:', e);
-        this.showToast('Erro ao gerar PDF');
+      PdfService.exportWithSignature();
+    });
+
+    // Signature modal buttons
+    document.getElementById('btn-sig-clear')?.addEventListener('click', () => {
+      SignatureService.clear();
+    });
+    document.getElementById('btn-sig-confirm')?.addEventListener('click', () => {
+      if (SignatureService._onConfirm) SignatureService._onConfirm();
+    });
+    document.getElementById('modal-sig-close')?.addEventListener('click', () => {
+      SignatureService.hide();
+    });
+    document.getElementById('modal-signature-overlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modal-signature-overlay') SignatureService.hide();
+    });
+
+    // Share button
+    document.getElementById('btn-share')?.addEventListener('click', async () => {
+      await ShareService.share();
+    });
+
+    // Templates button
+    document.getElementById('btn-templates')?.addEventListener('click', async () => {
+      await TemplatesService.renderModal();
+      document.getElementById('modal-templates-overlay')?.classList.add('active');
+    });
+    document.getElementById('modal-templates-close')?.addEventListener('click', () => {
+      document.getElementById('modal-templates-overlay')?.classList.remove('active');
+    });
+    document.getElementById('modal-templates-overlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modal-templates-overlay') {
+        document.getElementById('modal-templates-overlay')?.classList.remove('active');
       }
+    });
+    document.getElementById('btn-save-template')?.addEventListener('click', () => {
+      TemplatesService.showSavePrompt();
     });
 
     // Modal: Add custom item
@@ -163,6 +223,47 @@ const App = {
       UI.renderTabs();
       this.showToast('Atividade criada!');
     });
+  },
+
+  // ===== FEATURE 4: NOTIFICATION REMINDER =====
+  async _scheduleReminder() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      // Don't ask on first load — wait for user action
+      return;
+    }
+    if (Notification.permission !== 'granted') return;
+
+    const now = new Date();
+    const tomorrow7am = new Date(now);
+    tomorrow7am.setDate(tomorrow7am.getDate() + 1);
+    tomorrow7am.setHours(7, 0, 0, 0);
+
+    const delay = tomorrow7am - now;
+    if (delay > 0 && delay < 86400000) {
+      setTimeout(() => {
+        new Notification('Checklist de Campo', {
+          body: 'Não esqueça de revisar o checklist antes de sair para campo!',
+          icon: './icons/icon-192.png',
+          badge: './icons/icon-192.png'
+        });
+        this._scheduleReminder(); // Reschedule for next day
+      }, delay);
+    }
+  },
+
+  async requestNotificationPermission() {
+    if (!('Notification' in window)) {
+      this.showToast('Notificações não suportadas');
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      this.showToast('Notificações ativadas!');
+      this._scheduleReminder();
+    } else {
+      this.showToast('Permissão de notificação negada');
+    }
   },
 
   // ===== TOAST =====

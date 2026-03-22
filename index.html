@@ -31,7 +31,7 @@
         <h1>Checklist de Campo</h1>
       </div>
       <div class="header-right">
-        <span id="sync-badge" class="sync-badge hidden">0</span>
+        <span id="sync-badge" class="sync-badge hidden" aria-live="polite" aria-label="Itens pendentes de sincronização">0</span>
         <div class="header-status" id="status-badge">
           <span class="status-dot"></span>
           <span class="status-text">Online</span>
@@ -46,29 +46,51 @@
   </header>
 
   <!-- ===== TABS DE ATIVIDADE ===== -->
-  <nav class="tabs-nav" id="tabs-nav">
+  <nav class="tabs-nav" id="tabs-nav" role="navigation" aria-label="Atividades">
     <!-- Rendered dynamically by UI.renderTabs() -->
   </nav>
 
   <!-- ===== VIEW: CHECKLIST (principal) ===== -->
-  <main class="view active" id="view-checklist">
+  <main class="view active" id="view-checklist" role="main">
     <div class="main-content" id="checklist-content">
-      <!-- Rendered dynamically by UI.renderChecklist() -->
+      <!-- Skeleton loader — removed after init -->
+      <div id="skeleton-loader" aria-hidden="true">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card skeleton-short"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card skeleton-short"></div>
+      </div>
     </div>
 
     <!-- Footer actions -->
     <div class="footer-actions">
       <div class="footer-row">
-        <button class="btn-action btn-export" id="btn-export-pdf">
+        <button class="btn-action btn-export" id="btn-export-pdf" aria-label="Exportar checklist como PDF">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
             <polyline points="14 2 14 8 20 8" />
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
-          Exportar PDF
+          PDF
         </button>
-        <button class="btn-action btn-new-day" id="btn-new-day">
+        <button class="btn-action btn-share" id="btn-share" aria-label="Compartilhar resumo do checklist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+          Compartilhar
+        </button>
+      </div>
+      <div class="footer-row">
+        <button class="btn-action btn-templates-btn" id="btn-templates" aria-label="Gerenciar templates salvos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+          </svg>
+          Templates
+        </button>
+        <button class="btn-action btn-new-day" id="btn-new-day" aria-label="Iniciar novo dia (limpar checklist)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
             <path d="M1 4v6h6M23 20v-6h-6" />
             <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
@@ -76,6 +98,12 @@
           Novo Dia
         </button>
       </div>
+      <button class="btn-notif-toggle" id="btn-notif" aria-label="Ativar notificações de lembrete" onclick="App.requestNotificationPermission()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+        </svg>
+        Ativar lembrete diário
+      </button>
     </div>
   </main>
 
@@ -85,15 +113,15 @@
   </section>
 
   <!-- ===== BOTTOM NAV ===== -->
-  <nav class="bottom-nav">
-    <button class="bottom-nav-btn active" data-view="checklist">
+  <nav class="bottom-nav" role="navigation" aria-label="Navegação principal">
+    <button class="bottom-nav-btn active" data-view="checklist" aria-label="Ver checklist" aria-current="page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
         <path d="M9 11l3 3L22 4" />
         <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
       </svg>
       <span>Checklist</span>
     </button>
-    <button class="bottom-nav-btn" data-view="history">
+    <button class="bottom-nav-btn" data-view="history" aria-label="Ver histórico">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
@@ -108,9 +136,7 @@
       <div class="modal-header">
         <h2 id="modal-title">Adicionar Material</h2>
         <button class="modal-close" id="modal-close" aria-label="Fechar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
       </div>
       <form id="form-add-item" autocomplete="off">
@@ -124,9 +150,7 @@
         </div>
         <input type="hidden" id="input-item-activity">
         <button type="submit" class="btn-save">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <path d="M5 13l4 4L19 7" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M5 13l4 4L19 7" /></svg>
           Salvar Material
         </button>
       </form>
@@ -139,9 +163,7 @@
       <div class="modal-header">
         <h2>Nova Atividade</h2>
         <button class="modal-close" id="modal-activity-close" aria-label="Fechar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
         </button>
       </div>
       <form id="form-add-activity" autocomplete="off">
@@ -150,12 +172,47 @@
           <input type="text" id="input-activity-name" placeholder="Ex: Manutenção de Poço" required>
         </div>
         <button type="submit" class="btn-save">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <path d="M5 13l4 4L19 7" />
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M5 13l4 4L19 7" /></svg>
           Criar Atividade
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: TEMPLATES ===== -->
+  <div class="modal-overlay" id="modal-templates-overlay">
+    <div class="modal" id="modal-templates">
+      <div class="modal-header">
+        <h2>Templates</h2>
+        <button class="modal-close" id="modal-templates-close" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div id="templates-list"><!-- rendered by JS --></div>
+      <button class="btn-save" id="btn-save-template" style="margin-top: 12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" /></svg>
+        Salvar checklist atual como template
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: ASSINATURA DIGITAL ===== -->
+  <div class="modal-overlay" id="modal-signature-overlay">
+    <div class="modal" id="modal-signature">
+      <div class="modal-header">
+        <h2>Assinar Relatório</h2>
+        <button class="modal-close" id="modal-sig-close" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <p style="font-size:0.82rem; color: var(--clr-text-secondary); margin-bottom: 8px;">
+        Assine com o dedo na área abaixo
+      </p>
+      <canvas id="signature-canvas" width="400" height="160" style="border: 1.5px solid var(--clr-border); border-radius: var(--radius-md); touch-action: none; width: 100%; background: #fff;"></canvas>
+      <div style="display:flex; gap: 10px; margin-top: 12px;">
+        <button class="btn-action" id="btn-sig-clear" style="background: var(--clr-border); color: var(--clr-text); flex:1;">Limpar</button>
+        <button class="btn-save" id="btn-sig-confirm" style="flex:2;">Confirmar e Exportar PDF</button>
+      </div>
     </div>
   </div>
 
@@ -173,6 +230,9 @@
   <script src="js/sync.js"></script>
   <script src="js/history.js"></script>
   <script src="js/pdf.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/signature.js"></script>
+  <script src="js/share.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
 </body>

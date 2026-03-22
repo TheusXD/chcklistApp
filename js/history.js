@@ -1,11 +1,12 @@
 /**
- * history.js — History view: list past checklists and show details
+ * history.js — History view with dashboard metrics
  */
 
 const HistoryView = {
   async render(container) {
     const checklists = await db.getAllChecklists();
     const today = appState.today;
+    const pastChecklists = checklists.filter(c => c.date !== today);
 
     container.innerHTML = `
       <div class="history-header">
@@ -16,12 +17,14 @@ const HistoryView = {
           Histórico de Checklists
         </h2>
       </div>
+      <div id="metrics-dashboard"></div>
       <div class="history-list" id="history-list"></div>
     `;
 
-    const list = container.querySelector('#history-list');
+    // Render dashboard
+    this._renderDashboard(pastChecklists, container.querySelector('#metrics-dashboard'));
 
-    const pastChecklists = checklists.filter(c => c.date !== today);
+    const list = container.querySelector('#history-list');
 
     if (pastChecklists.length === 0) {
       list.innerHTML = '<div class="empty-state">Nenhum checklist anterior encontrado.</div>';
@@ -73,6 +76,129 @@ const HistoryView = {
     }
   },
 
+  // ===== DASHBOARD METRICS =====
+  _renderDashboard(checklists, container) {
+    if (!container || checklists.length === 0) {
+      if (container) container.innerHTML = '';
+      return;
+    }
+
+    // Calculate metrics
+    let totalPcts = 0;
+    let completeDays = 0;
+    const materialCounts = {};
+
+    for (const ck of checklists) {
+      let total = 0, checked = 0;
+      for (const key in ck.items) {
+        total++;
+        const item = ck.items[key];
+        if (item.checked || item.qty > 0) {
+          checked++;
+          // Track material usage by key
+          const matKey = key.split('-').slice(1).join('-');
+          materialCounts[matKey] = (materialCounts[matKey] || 0) + (item.qty || 1);
+        }
+      }
+      for (const key in ck.customChecks) {
+        total++;
+        if (ck.customChecks[key].checked || ck.customChecks[key].qty > 0) checked++;
+      }
+      const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+      totalPcts += pct;
+      if (pct === 100) completeDays++;
+    }
+
+    const avgPct = Math.round(totalPcts / checklists.length);
+
+    // Top 5 materials
+    const topMaterials = Object.entries(materialCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    container.innerHTML = `
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-value">${avgPct}%</span>
+          <span class="metric-label">Conclusão média</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-value">${completeDays}</span>
+          <span class="metric-label">Dias completos</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-value">${checklists.length}</span>
+          <span class="metric-label">Total de dias</span>
+        </div>
+      </div>
+      <div class="metrics-chart-section">
+        <div class="section-title" style="margin-bottom:8px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          Materiais mais usados
+        </div>
+        <canvas id="metrics-chart" height="160"></canvas>
+      </div>
+    `;
+
+    // Draw bar chart
+    if (topMaterials.length > 0) {
+      this._drawBarChart(container.querySelector('#metrics-chart'), topMaterials);
+    }
+  },
+
+  _drawBarChart(canvas, data) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const w = rect.width, h = rect.height;
+
+    const maxVal = Math.max(...data.map(d => d[1]), 1);
+    const barW = Math.min(40, (w - 40) / data.length - 10);
+    const startX = 40;
+    const barArea = h - 40;
+    const gap = (w - startX - data.length * barW) / (data.length + 1);
+
+    // Y axis
+    ctx.strokeStyle = '#E0E4EC';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX, 5);
+    ctx.lineTo(startX, h - 25);
+    ctx.stroke();
+
+    // Bars
+    const colors = ['#0D47A1', '#1565C0', '#1976D2', '#2E7D32', '#43A047'];
+    data.forEach(([label, value], i) => {
+      const barH = (value / maxVal) * (barArea - 10);
+      const x = startX + gap * (i + 1) + barW * i;
+      const y = h - 25 - barH;
+
+      // Bar
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.beginPath();
+      ctx.roundRect(x, y, barW, barH, 4);
+      ctx.fill();
+
+      // Value
+      ctx.fillStyle = '#1A1A2E';
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(value.toString(), x + barW / 2, y - 5);
+
+      // Label
+      ctx.fillStyle = '#5A6072';
+      ctx.font = '500 9px Inter, sans-serif';
+      const lbl = label.length > 8 ? label.slice(0, 7) + '…' : label;
+      ctx.fillText(lbl, x + barW / 2, h - 8);
+    });
+  },
+
   async renderDetail(container, date) {
     const ck = await db.getChecklist(date);
     if (!ck) {
@@ -88,7 +214,7 @@ const HistoryView = {
 
     let html = `
       <div class="detail-header">
-        <button class="btn-back" id="btn-back">
+        <button class="btn-back" id="btn-back" aria-label="Voltar ao histórico">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>

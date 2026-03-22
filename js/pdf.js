@@ -1,9 +1,10 @@
 /**
  * pdf.js — PDF Export using jsPDF + AutoTable
+ * Integrated with SignatureService for digital signatures
  */
 
 const PdfService = {
-  async exportChecklist(date) {
+  async exportChecklist(date, signatureDataURL) {
     const ck = date ? await db.getChecklist(date) : appState.checklist;
     if (!ck) { alert('Nenhum checklist para exportar.'); return; }
 
@@ -11,8 +12,15 @@ const PdfService = {
     const customItems = await db.getAllCustomItems();
     const photos = await db.getPhotos(ck.date);
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
+    // Defensive accessor — jsPDF can register under different global names
+    const jsPDFClass = (window.jspdf && window.jspdf.jsPDF)
+      || window.jsPDF
+      || (typeof jsPDF !== 'undefined' ? jsPDF : null);
+    if (!jsPDFClass) {
+      alert('Erro: Biblioteca jsPDF não carregada. Verifique sua conexão e recarregue.');
+      return;
+    }
+    const doc = new jsPDFClass('p', 'mm', 'a4');
     const pageW = doc.internal.pageSize.getWidth();
     let y = 15;
 
@@ -143,6 +151,25 @@ const PdfService = {
       y += thumbSize + 10;
     }
 
+    // ===== SIGNATURE =====
+    if (signatureDataURL) {
+      if (y > 240) { doc.addPage(); y = 15; }
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(13, 71, 161);
+      doc.text('Assinatura do Responsável', 14, y);
+      y += 5;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, y, pageW - 14, y);
+      y += 3;
+      try {
+        doc.addImage(signatureDataURL, 'PNG', 14, y, 80, 30);
+        y += 35;
+      } catch (e) {
+        console.warn('[PDF] Signature error:', e);
+      }
+    }
+
     // ===== FOOTER =====
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
@@ -153,5 +180,21 @@ const PdfService = {
     }
 
     doc.save(`checklist-${ck.date}.pdf`);
+  },
+
+  // Entry point: opens signature modal first, then generates PDF
+  async exportWithSignature() {
+    SignatureService.show(async () => {
+      const sigData = SignatureService.getDataURL();
+      SignatureService.hide();
+      App.showToast('Gerando PDF...');
+      try {
+        await this.exportChecklist(null, sigData);
+        App.showToast('PDF gerado!');
+      } catch (e) {
+        console.error('[PDF] Error:', e);
+        App.showToast('Erro ao gerar PDF');
+      }
+    });
   }
 };

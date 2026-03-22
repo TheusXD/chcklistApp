@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'ChecklistCampoDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 class ChecklistDB {
   constructor() {
@@ -13,17 +13,21 @@ class ChecklistDB {
   }
 
   _defineSchema() {
-    this.db.version(DB_VERSION).stores({
-      // Daily checklists keyed by date string (YYYY-MM-DD)
+    this.db.version(1).stores({
       checklists: 'date, createdAt',
-      // Custom materials added by users, per activity
       customItems: '++id, activityId',
-      // User-created activities (beyond the 2 defaults)
       activities: '++id, name, isCustom',
-      // Photos attached to checklists
       photos: '++id, checklistDate, activityId, timestamp',
-      // Pending sync queue
       pendingSync: '++id, timestamp'
+    });
+
+    this.db.version(2).stores({
+      checklists: 'date, createdAt',
+      customItems: '++id, activityId',
+      activities: '++id, name, isCustom',
+      photos: '++id, checklistDate, activityId, timestamp',
+      pendingSync: '++id, timestamp',
+      templates: '++id, name, createdAt'
     });
   }
 
@@ -120,6 +124,24 @@ class ChecklistDB {
 
   async deletePendingSyncItem(id) {
     return await this.db.pendingSync.delete(id);
+  }
+
+  // ===== TEMPLATES =====
+
+  async addTemplate(template) {
+    return await this.db.templates.add(template);
+  }
+
+  async getTemplate(id) {
+    return await this.db.templates.get(id);
+  }
+
+  async getAllTemplates() {
+    return await this.db.templates.orderBy('createdAt').reverse().toArray();
+  }
+
+  async deleteTemplate(id) {
+    return await this.db.templates.delete(id);
   }
 
   // ===== SEED DEFAULT ACTIVITIES =====
