@@ -282,11 +282,52 @@ const App = {
 
   // ===== SERVICE WORKER =====
   _registerSW() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('[SW] Registered'))
-        .catch(err => console.warn('[SW] Registration failed:', err));
-    }
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      console.log('[SW] Registered');
+
+      // Auto-update: when a new SW is waiting, tell it to activate immediately
+      const awaitNewSW = (worker) => {
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'activated') {
+            // New SW active — reload to pick up new assets
+            if (!sessionStorage.getItem('sw-reloaded')) {
+              sessionStorage.setItem('sw-reloaded', '1');
+              window.location.reload();
+            }
+          }
+        });
+      };
+
+      if (reg.waiting) {
+        // A new SW is already waiting — activate it now
+        reg.waiting.postMessage('SKIP_WAITING');
+        awaitNewSW(reg.waiting);
+      }
+
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        if (newSW) {
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+              // New SW installed while old one controls — force switch
+              newSW.postMessage('SKIP_WAITING');
+              awaitNewSW(newSW);
+            }
+          });
+        }
+      });
+
+      // Also listen for controller change (another tab triggered update)
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!sessionStorage.getItem('sw-reloaded')) {
+          sessionStorage.setItem('sw-reloaded', '1');
+          window.location.reload();
+        }
+      });
+
+    }).catch(err => console.warn('[SW] Registration failed:', err));
   }
 };
 
