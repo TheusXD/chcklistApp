@@ -38,6 +38,15 @@ class AppState {
     this._activities = await db.getActivities();
     await this._loadToday();
     await this._loadCustomItems();
+
+    // Restore team name from localStorage if checklist doesn't have one
+    if (!this._checklist.teamName) {
+      const saved = localStorage.getItem('teamName');
+      if (saved) {
+        this._checklist.teamName = saved;
+        this._schedSave();
+      }
+    }
   }
 
   async _loadToday() {
@@ -62,11 +71,25 @@ class AppState {
     return {
       date: this._today,
       createdAt: Date.now(),
+      teamName: localStorage.getItem('teamName') || '',
       items: {},       // { "activityId-materialKey": { checked: false, qty: 0, diameter: '', type: '' } }
       customChecks: {}, // { "custom-itemId": { checked: false, qty: 0 } }
       observations: {}, // { activityId: "text" }
       geo: null         // { lat, lng, timestamp }
     };
+  }
+
+  // ===== TEAM NAME =====
+
+  get teamName() {
+    return this._checklist?.teamName || '';
+  }
+
+  setTeamName(name) {
+    this._checklist.teamName = name;
+    localStorage.setItem('teamName', name); // persist across new days
+    this._schedSave();
+    this._notify();
   }
 
   // ===== GETTERS =====
@@ -221,9 +244,18 @@ class AppState {
   async startNewDay() {
     // Save current checklist one final time
     await this._saveNow();
+
+    // Archive: copy the completed checklist with a timestamped key so it stays in history
+    const completed = { ...this._checklist };
+    const archiveDate = completed.date + '_' + Date.now();
+    completed.archivedFrom = completed.date;
+    completed.date = archiveDate;
+    await db.saveChecklist(completed);
+
     // Add to sync queue
     await db.addPendingSync(this._checklist);
-    // Reset
+
+    // Reset in-memory state (new empty checklist for today)
     this._checklist = this._createEmptyChecklist();
     await this._saveNow();
     this._notify();

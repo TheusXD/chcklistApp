@@ -6,7 +6,13 @@ const HistoryView = {
   async render(container) {
     const checklists = await db.getAllChecklists();
     const today = appState.today;
-    const pastChecklists = checklists.filter(c => c.date !== today);
+    const pastChecklists = checklists.filter(c => {
+      // Exclude today's active checklist (exact match only)
+      if (c.date === today) return false;
+      // Exclude empty checklists (no items at all)
+      if (Object.keys(c.items || {}).length === 0 && Object.keys(c.customChecks || {}).length === 0) return false;
+      return true;
+    });
 
     container.innerHTML = `
       <div class="history-header">
@@ -36,6 +42,9 @@ const HistoryView = {
       card.className = 'history-card';
       card.setAttribute('data-date', ck.date);
 
+      // Use archivedFrom for display date if available (archived entries have timestamped keys)
+      const displayDate = ck.archivedFrom || ck.date.split('_')[0];
+
       // Count stats
       let total = 0, checked = 0;
       for (const key in ck.items) {
@@ -48,14 +57,17 @@ const HistoryView = {
       }
       const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
 
-      const dateObj = new Date(ck.date + 'T12:00:00');
+      const dateObj = new Date(displayDate + 'T12:00:00');
       const dateStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-      const hasPhotos = await db.getPhotos(ck.date);
+      const hasPhotos = await db.getPhotos(displayDate);
       const hasGeo = !!ck.geo;
 
       card.innerHTML = `
         <div class="history-card-top">
-          <div class="history-date">${dateStr}</div>
+          <div>
+            <div class="history-date">${dateStr}</div>
+            ${ck.teamName ? `<div class="history-team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> ${ck.teamName}</div>` : ''}
+          </div>
           <div class="history-pct ${pct === 100 ? 'complete' : ''}">${pct}%</div>
         </div>
         <div class="history-progress-bar">
@@ -206,10 +218,11 @@ const HistoryView = {
       return;
     }
 
+    const displayDate = ck.archivedFrom || date.split('_')[0];
     const activities = await db.getActivities();
     const customItems = await db.getAllCustomItems();
-    const photos = await db.getPhotos(date);
-    const dateObj = new Date(date + 'T12:00:00');
+    const photos = await db.getPhotos(displayDate);
+    const dateObj = new Date(displayDate + 'T12:00:00');
     const dateStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     let html = `
@@ -222,6 +235,7 @@ const HistoryView = {
         </button>
         <h2 class="view-title">${dateStr}</h2>
       </div>
+      ${ck.teamName ? `<div class="detail-team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> Equipe: <strong>${ck.teamName}</strong></div>` : ''}
     `;
 
     // Geo

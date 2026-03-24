@@ -17,6 +17,7 @@ const STATIC_ASSETS = [
   './js/templates.js',
   './js/signature.js',
   './js/share.js',
+  './js/admin.js',
   './js/app.js'
 ];
 

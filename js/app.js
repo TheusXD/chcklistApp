@@ -20,6 +20,8 @@ const App = {
       // Set date
       this._setDate();
 
+      // Team name input
+      this._bindTeamInput();
       // Fix 1.3: Dynamic header height
       this._updateHeaderHeight();
       window.addEventListener('resize', () => this._updateHeaderHeight());
@@ -67,6 +69,21 @@ const App = {
   _setDate() {
     const el = document.getElementById('header-date');
     if (el) el.textContent = appState.todayFormatted;
+  },
+
+  // ===== TEAM NAME =====
+  _bindTeamInput() {
+    const input = document.getElementById('input-team-name');
+    if (!input) return;
+    input.value = appState.teamName;
+    let debounce = null;
+    input.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        appState.setTeamName(input.value.trim());
+        this._updateHeaderHeight();
+      }, 400);
+    });
   },
 
   // ===== FIX 1.3: DYNAMIC HEADER HEIGHT =====

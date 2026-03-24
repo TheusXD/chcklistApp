@@ -12,6 +12,11 @@ const ShareService = {
 
     let text = `📋 Checklist de Campo\n📅 ${dateStr}\n`;
 
+    // Team
+    if (ck.teamName) {
+      text += `👥 Equipe: ${ck.teamName}\n`;
+    }
+
     // Geo
     if (ck.geo) {
       text += `📍 ${GeoService.formatCoords(ck.geo)}\n`;

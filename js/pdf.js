@@ -37,6 +37,12 @@ const PdfService = {
     const dateStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     doc.text(dateStr, 14, 22);
 
+    // Team name
+    if (ck.teamName) {
+      doc.setFontSize(10);
+      doc.text(`Equipe: ${ck.teamName}`, 14, 27);
+    }
+
     // Geo
     if (ck.geo) {
       doc.setFontSize(9);
