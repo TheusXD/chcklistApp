@@ -269,8 +269,8 @@ const App = {
           if (coords) {
             const pvData = await GISService.analyzeNetworkAtLocation(coords.lat, coords.lng);
             if (pvData && pvData.found && pvData.maxDepth > 1.5) {
-              alert(`⚠️ Atenção: PV com ${pvData.maxDepth.toFixed(2)}m de profundidade identificado no raio de 50m do local!\n\nAdicionando itens de escoramento ao checklist.`);
-              await appState.addCustomItem(id, 'Escora Metálica / Pranchão', 'Conforme necessidade');
+              alert('rede acima de 1,5 ,necessário a utilização da escora');
+              await appState.addCustomItem(id, 'Escora', 'Conforme necessidade');
               UI.renderChecklist();
             }
           } else {

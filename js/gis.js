@@ -44,6 +44,7 @@ const GISService = {
       const params = new URLSearchParams({
         geometry: `${lng},${lat}`,
         geometryType: 'esriGeometryPoint',
+        inSR: '4326',
         spatialRel: 'esriSpatialRelIntersects',
         distance: '50', // raio de 50 metros
         units: 'esriSRUnit_Meter',
