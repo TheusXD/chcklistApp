@@ -125,25 +125,8 @@
   </section>
 
   <!-- ===== VIEW: MAPA ===== -->
-  <section class="view" id="view-map" style="padding: 0; height: calc(100vh - 70px); overflow: hidden;">
-    <style>
-      /* CSS Hack para forçar o ArcGIS a exibir modo desktop em celulares, 
-         liberando o botão de fechar (X) da aba "Sobre" */
-      .map-iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-      }
-      @media (max-width: 600px) {
-        .map-iframe {
-          width: 200%;
-          height: 200%;
-          transform: scale(0.5);
-          transform-origin: top left;
-        }
-      }
-    </style>
-    <iframe class="map-iframe" src="https://gis.iguasa.com.br/portal/apps/webappviewer/index.html?id=0d16863d15fa4d0ba5473f0299accdd7"></iframe>
+  <section class="view" id="view-map" style="padding: 0; padding-bottom: 60px; height: 100vh; height: 100dvh; box-sizing: border-box; overflow: hidden;">
+    <iframe src="https://gis.iguasa.com.br/portal/apps/webappviewer/index.html?id=0d16863d15fa4d0ba5473f0299accdd7" width="100%" height="100%" frameborder="0" style="border: none;"></iframe>
   </section>
 
   <!-- ===== BOTTOM NAV ===== -->
