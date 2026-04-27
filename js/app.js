@@ -246,13 +246,43 @@ const App = {
 
     formActivity?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById('input-activity-name').value.trim();
+      const nameInput = document.getElementById('input-activity-name');
+      const addrInput = document.getElementById('input-activity-address');
+      const name = nameInput.value.trim();
+      const address = addrInput ? addrInput.value.trim() : '';
+
       if (!name) return;
+
+      if (address) {
+        this.showToast('Analisando rede de esgoto do local...', 3000);
+      }
+
       const id = await appState.addActivity(name);
       activityOverlay.classList.remove('active');
       UI.setActivity(id);
       UI.renderTabs();
       this.showToast('Atividade criada!');
+
+      if (address) {
+        try {
+          const coords = await GISService.geocodeAddress(address);
+          if (coords) {
+            const pvData = await GISService.analyzeNetworkAtLocation(coords.lat, coords.lng);
+            if (pvData && pvData.found && pvData.maxDepth > 1.5) {
+              alert(`⚠️ Atenção: PV com ${pvData.maxDepth.toFixed(2)}m de profundidade identificado no raio de 50m do local!\n\nAdicionando itens de escoramento ao checklist.`);
+              await appState.addCustomItem(id, 'Escora Metálica / Pranchão', 'Conforme necessidade');
+              UI.renderChecklist();
+            }
+          } else {
+             console.warn('Endereço não localizado no GIS.');
+          }
+        } catch (error) {
+          console.error('Erro na análise GIS:', error);
+        }
+      }
+
+      nameInput.value = '';
+      if (addrInput) addrInput.value = '';
     });
   },
 
