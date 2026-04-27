@@ -82,7 +82,7 @@ class ChecklistDB {
 
   async deleteActivity(id) {
     // Also delete associated custom items
-    await this.db.customItems.where('activityId').equals('custom-' + id).delete();
+    await this.db.customItems.where('activityId').equals(id).delete();
     return await this.db.activities.delete(id);
   }
 

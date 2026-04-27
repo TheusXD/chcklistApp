@@ -55,7 +55,7 @@ const TemplatesService = {
       appState.checklist.items = { ...template.items };
     }
     if (template.customChecks) {
-      appState.checklist.customChecks = {};
+      appState.checklist.customChecks = { ...template.customChecks };
     }
 
     await appState._saveNow();

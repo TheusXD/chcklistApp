@@ -234,8 +234,18 @@ class AppState {
   }
 
   async deleteActivity(id) {
+    // Clean up checklist items associated with this activity
+    for (const key in this._checklist.items) {
+      if (key.startsWith(`${id}-`)) {
+        delete this._checklist.items[key];
+      }
+    }
+    // Clean up observation
+    delete this._checklist.observations[id];
+
     await db.deleteActivity(id);
     this._activities = await db.getActivities();
+    this._schedSave();
     this._notify();
   }
 
@@ -254,6 +264,12 @@ class AppState {
 
     // Add to sync queue
     await db.addPendingSync(this._checklist);
+
+    // Delete the active day checklist from db to prevent duplication
+    await db.deleteChecklist(this._checklist.date);
+
+    // Reset geolocation in memory
+    if (window.GeoService) GeoService.reset();
 
     // Reset in-memory state (new empty checklist for today)
     this._checklist = this._createEmptyChecklist();

@@ -96,7 +96,6 @@ const SignatureService = {
     // Re-setup canvas after modal is visible
     setTimeout(() => {
       this._setupCanvas();
-      this._bindEvents();
     }, 350);
 
     // Store callback for confirm button

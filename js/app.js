@@ -315,6 +315,8 @@ const App = {
   _registerSW() {
     if (!('serviceWorker' in navigator)) return;
 
+    let refreshing = false;
+
     navigator.serviceWorker.register('service-worker.js').then(reg => {
       console.log('[SW] Registered');
 
@@ -322,9 +324,8 @@ const App = {
       const awaitNewSW = (worker) => {
         worker.addEventListener('statechange', () => {
           if (worker.state === 'activated') {
-            // New SW active — reload to pick up new assets
-            if (!sessionStorage.getItem('sw-reloaded')) {
-              sessionStorage.setItem('sw-reloaded', '1');
+            if (!refreshing) {
+              refreshing = true;
               window.location.reload();
             }
           }
@@ -352,8 +353,8 @@ const App = {
 
       // Also listen for controller change (another tab triggered update)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!sessionStorage.getItem('sw-reloaded')) {
-          sessionStorage.setItem('sw-reloaded', '1');
+        if (!refreshing) {
+          refreshing = true;
           window.location.reload();
         }
       });

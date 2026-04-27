@@ -211,7 +211,17 @@ const HistoryView = {
     });
   },
 
+  _objectUrls: [],
+
   async renderDetail(container, date) {
+    // Clean up previous Object URLs
+    if (this._objectUrls) {
+      this._objectUrls.forEach(url => URL.revokeObjectURL(url));
+      this._objectUrls = [];
+    } else {
+      this._objectUrls = [];
+    }
+
     const ck = await db.getChecklist(date);
     if (!ck) {
       container.innerHTML = '<div class="empty-state">Checklist não encontrado.</div>';
@@ -304,6 +314,7 @@ const HistoryView = {
       html += `<div class="photo-grid detail-photos">`;
       for (const photo of photos) {
         const url = PhotoService.createThumbnailUrl(photo.thumbnail || photo.blob);
+        this._objectUrls.push(url);
         html += `<div class="photo-thumb"><img src="${url}" alt="Foto"></div>`;
       }
       html += `</div>`;
@@ -312,6 +323,11 @@ const HistoryView = {
     container.innerHTML = html;
 
     container.querySelector('#btn-back')?.addEventListener('click', () => {
+      // Clean up URLs when leaving detail view
+      if (this._objectUrls) {
+        this._objectUrls.forEach(url => URL.revokeObjectURL(url));
+        this._objectUrls = [];
+      }
       window.location.hash = '#history';
     });
   }

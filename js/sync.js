@@ -43,23 +43,65 @@ const SyncService = {
     const pending = await db.getPendingSync();
     if (pending.length === 0) return;
 
-    console.log(`[Sync] Syncing ${pending.length} pending items...`);
+    if (!window.FirebaseDB || !window.FirebaseStorage) {
+      console.warn('[Sync] Firebase não configurado. Abortando sync real.');
+      return;
+    }
+
+    console.log(`[Sync] Iniciando sync de ${pending.length} checklists...`);
 
     for (const item of pending) {
       try {
-        // Simulated sync — in production, replace with actual API call
-        // await fetch('/api/checklists', { method: 'POST', body: JSON.stringify(item.data) });
-        console.log('[Sync] Sent:', item.data.date || 'unknown', item.data);
+        const checklist = item.data;
+        const displayDate = checklist.archivedFrom || checklist.date.split('_')[0];
+        
+        // 1. Fetch photos for this checklist
+        const photos = await db.getPhotos(displayDate);
+        const uploadedPhotos = [];
+
+        // 2. Upload photos to Firebase Storage
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          const fileName = `checklists/${checklist.date}/foto_${photo.activityId}_${photo.timestamp}.jpg`;
+          const storageRef = window.FirebaseStorage.ref().child(fileName);
+          
+          console.log(`[Sync] Fazendo upload da foto ${i+1}/${photos.length}...`);
+          // Se for blob, envia direto
+          const uploadTask = await storageRef.put(photo.blob);
+          const downloadUrl = await uploadTask.ref.getDownloadURL();
+          
+          uploadedPhotos.push({
+            activityId: photo.activityId,
+            timestamp: photo.timestamp,
+            url: downloadUrl
+          });
+        }
+
+        // 3. Prepare final document
+        const firestoreData = {
+          ...checklist,
+          photos: uploadedPhotos,
+          syncedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // 4. Save to Firestore
+        console.log(`[Sync] Salvando checklist no Firestore...`);
+        await window.FirebaseDB.collection('checklists').doc(checklist.date).set(firestoreData);
+
+        // 5. Remove from local pending queue
         await db.deletePendingSyncItem(item.id);
+        console.log(`[Sync] Item ${checklist.date} sincronizado com sucesso!`);
+
       } catch (e) {
-        console.warn('[Sync] Failed to sync item:', e);
-        break; // Stop on first failure, retry later
+        console.error('[Sync] Falha ao sincronizar item:', e);
+        // Break on first error to retry later (e.g. if network drops mid-upload)
+        break;
       }
     }
 
     await this._updateCount();
     this._updateStatusUI(navigator.onLine);
-    console.log('[Sync] Complete. Remaining:', this._pendingCount);
+    console.log('[Sync] Processo concluído. Restantes:', this._pendingCount);
   },
 
   isOnline() {

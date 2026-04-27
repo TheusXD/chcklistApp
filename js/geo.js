@@ -5,6 +5,10 @@
 const GeoService = {
   _position: null,
 
+  reset() {
+    this._position = null;
+  },
+
   async capture() {
     if (!('geolocation' in navigator)) {
       console.warn('[Geo] Geolocation not supported');
