@@ -124,6 +124,11 @@
     <!-- Rendered dynamically by HistoryView -->
   </section>
 
+  <!-- ===== VIEW: MAPA ===== -->
+  <section class="view" id="view-map" style="padding: 0; height: calc(100vh - 70px); overflow: hidden;">
+    <iframe src="https://gis.iguasa.com.br/portal/apps/webappviewer/index.html?id=0d16863d15fa4d0ba5473f0299accdd7" width="100%" height="100%" frameborder="0" style="border: none;"></iframe>
+  </section>
+
   <!-- ===== BOTTOM NAV ===== -->
   <nav class="bottom-nav" role="navigation" aria-label="Navegação principal">
     <button class="bottom-nav-btn active" data-view="checklist" aria-label="Ver checklist" aria-current="page">
@@ -132,6 +137,13 @@
         <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
       </svg>
       <span>Checklist</span>
+    </button>
+    <button class="bottom-nav-btn" data-view="map" aria-label="Ver mapa">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+      <span>Mapa</span>
     </button>
     <button class="bottom-nav-btn" data-view="history" aria-label="Ver histórico">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">

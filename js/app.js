@@ -108,11 +108,18 @@ const App = {
     const hash = window.location.hash || '#checklist';
     const mainView = document.getElementById('view-checklist');
     const historyView = document.getElementById('view-history');
+    const mapView = document.getElementById('view-map');
     const navBtns = document.querySelectorAll('.bottom-nav-btn');
+    const header = document.getElementById('app-header');
+    const tabsNav = document.getElementById('tabs-nav');
 
     // Hide all views
     mainView?.classList.remove('active');
     historyView?.classList.remove('active');
+    mapView?.classList.remove('active');
+
+    // Toggle body class for map view
+    document.body.classList.toggle('map-active', hash === '#map');
 
     if (hash === '#history' || hash.startsWith('#history/')) {
       historyView?.classList.add('active');
@@ -128,6 +135,13 @@ const App = {
       } else {
         HistoryView.render(historyView);
       }
+    } else if (hash === '#map') {
+      mapView?.classList.add('active');
+      navBtns.forEach(b => {
+        b.classList.toggle('active', b.dataset.view === 'map');
+        b.removeAttribute('aria-current');
+        if (b.dataset.view === 'map') b.setAttribute('aria-current', 'page');
+      });
     } else {
       mainView?.classList.add('active');
       navBtns.forEach(b => {

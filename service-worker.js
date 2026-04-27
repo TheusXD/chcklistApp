@@ -1,4 +1,4 @@
-const CACHE_NAME = 'checklist-campo-v3';
+const CACHE_NAME = 'checklist-campo-v5';
 const STATIC_ASSETS = [
   './',
   './index.html',

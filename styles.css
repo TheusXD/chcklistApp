@@ -675,3 +675,5 @@ body {
   font-family: var(--font); font-size: 0.85rem; color: var(--clr-text); background: var(--clr-surface);
 }
 .admin-input:focus { outline: none; border-color: var(--clr-primary); }
+
+body.map-active .app-header, body.map-active .tabs-nav { display: none !important; }
