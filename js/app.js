@@ -247,15 +247,11 @@ const App = {
     formActivity?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const nameInput = document.getElementById('input-activity-name');
-      const addrInput = document.getElementById('input-activity-address');
+      const depthInput = document.getElementById('input-activity-depth');
       const name = nameInput.value.trim();
-      const address = addrInput ? addrInput.value.trim() : '';
+      const depth = depthInput ? parseFloat(depthInput.value) : 0;
 
       if (!name) return;
-
-      if (address) {
-        this.showToast('Analisando rede de esgoto do local...', 3000);
-      }
 
       const id = await appState.addActivity(name);
       activityOverlay.classList.remove('active');
@@ -263,26 +259,14 @@ const App = {
       UI.renderTabs();
       this.showToast('Atividade criada!');
 
-      if (address) {
-        try {
-          const coords = await GISService.geocodeAddress(address);
-          if (coords) {
-            const pvData = await GISService.analyzeNetworkAtLocation(coords.lat, coords.lng);
-            if (pvData && pvData.found && pvData.maxDepth > 1.5) {
-              alert('rede acima de 1,5 ,necessário a utilização da escora');
-              await appState.addCustomItem(id, 'Escora', 'Conforme necessidade');
-              UI.renderChecklist();
-            }
-          } else {
-             console.warn('Endereço não localizado no GIS.');
-          }
-        } catch (error) {
-          console.error('Erro na análise GIS:', error);
-        }
+      if (depth > 1.5) {
+        alert('rede acima de 1,5 ,necessário a utilização da escora');
+        await appState.addCustomItem(id, 'Escora', 'Conforme necessidade');
+        UI.renderChecklist();
       }
 
       nameInput.value = '';
-      if (addrInput) addrInput.value = '';
+      if (depthInput) depthInput.value = '';
     });
   },
 

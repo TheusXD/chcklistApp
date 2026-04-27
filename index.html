@@ -193,11 +193,11 @@
       <form id="form-add-activity" autocomplete="off">
         <div class="form-group">
           <label for="input-activity-name">Nome da Atividade *</label>
-          <input type="text" id="input-activity-name" placeholder="Ex: Manutenção de Poço" required>
+          <input type="text" id="input-activity-name" placeholder="Ex: Manutenção de rede/ramal" required>
         </div>
         <div class="form-group">
-          <label for="input-activity-address">Endereço / Local <span class="optional">(opcional)</span></label>
-          <input type="text" id="input-activity-address" placeholder="Ex: Rua das Flores, 123">
+          <label for="input-activity-depth">Profundidade Estimada da Rede (m) *</label>
+          <input type="number" step="0.1" id="input-activity-depth" placeholder="Ex: 1.8" required>
         </div>
         <button type="submit" class="btn-save">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M5 13l4 4L19 7" /></svg>
@@ -298,7 +298,6 @@
   <script src="js/share.js"></script>
   <script src="js/admin.js"></script>
   <script src="js/ui.js"></script>
-  <script src="js/gis.js"></script>
   <script src="js/app.js"></script>
 </body>
 
