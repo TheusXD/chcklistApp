@@ -247,26 +247,22 @@ const App = {
     formActivity?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const nameInput = document.getElementById('input-activity-name');
-      const depthInput = document.getElementById('input-activity-depth');
       const name = nameInput.value.trim();
-      const depth = depthInput ? parseFloat(depthInput.value) : 0;
 
       if (!name) return;
 
       const id = await appState.addActivity(name);
+      
+      // Injeção automática dos campos de controle de profundidade
+      await appState.addCustomItem(id, 'Verificar Profundidade no Mapa', '');
+      await appState.addCustomItem(id, 'Levar Escora Metálica / Pranchão?', '');
+
       activityOverlay.classList.remove('active');
       UI.setActivity(id);
       UI.renderTabs();
       this.showToast('Atividade criada!');
 
-      if (depth > 1.5) {
-        alert('rede acima de 1,5 ,necessário a utilização da escora');
-        await appState.addCustomItem(id, 'Escora', 'Conforme necessidade');
-        UI.renderChecklist();
-      }
-
       nameInput.value = '';
-      if (depthInput) depthInput.value = '';
     });
   },
 
