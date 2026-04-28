@@ -1,4 +1,4 @@
-const CACHE_NAME = 'checklist-campo-v11';
+const CACHE_NAME = 'checklist-campo-v12';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -23,7 +23,7 @@ const STATIC_ASSETS = [
 
 const CDN_ASSETS = [
   'https://unpkg.com/dexie@4.0.11/dist/dexie.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js'
 ];
 
