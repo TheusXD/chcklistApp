@@ -147,34 +147,7 @@ class ChecklistDB {
   // ===== SEED DEFAULT ACTIVITIES =====
 
   async seedDefaults() {
-    const count = await this.db.activities.count();
-    if (count === 0) {
-      await this.db.activities.bulkAdd([
-        {
-          name: 'Ligação de Esgoto',
-          icon: 'pipe',
-          isCustom: false,
-          materials: [
-            { key: 'tubo-pvc', name: 'Tubo de PVC', type: 'diameter', options: ['50mm', '75mm', '100mm', '150mm', '200mm'] },
-            { key: 'selim', name: 'Selim', type: 'radio', options: [{ value: 'trava', label: 'Selim Trava' }, { value: 'elastico', label: 'Selim Elástico' }] },
-            { key: 'curva', name: 'Curva', type: 'radio', options: [{ value: '90', label: 'Curva 90°' }, { value: '45', label: 'Curva 45°' }] }
-          ]
-        },
-        {
-          name: 'Reparo em Rede/Ramal',
-          icon: 'wrench',
-          isCustom: false,
-          materials: [
-            { key: 'tubo', name: 'Tubo', type: 'diameter', options: ['50mm', '75mm', '100mm', '150mm', '200mm', '250mm', '300mm'] },
-            { key: 'adaptador', name: 'Adaptador Ponta Bolsa', type: 'simple' },
-            { key: 'luva', name: 'Luva de Correr', type: 'simple' },
-            { key: 'graute', name: 'Graute', type: 'simple' },
-            { key: 'bica', name: 'Bica', type: 'simple' },
-            { key: 'po-pedra', name: 'Pó de Pedra', type: 'simple' }
-          ]
-        }
-      ]);
-    }
+    // Sem atividades padrão — o usuário cria as suas pelo botão "+"
   }
 }
 
