@@ -86,6 +86,11 @@ class ChecklistDB {
     return await this.db.activities.delete(id);
   }
 
+  async clearAllActivities() {
+    await this.db.customItems.clear();
+    return await this.db.activities.clear();
+  }
+
   // ===== PHOTOS =====
 
   async getPhotos(checklistDate, activityId) {

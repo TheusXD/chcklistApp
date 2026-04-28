@@ -165,12 +165,12 @@ const App = {
 
     // New day
     document.getElementById('btn-new-day')?.addEventListener('click', async () => {
-      if (confirm('Iniciar novo dia?\n\nO checklist atual será salvo no histórico e os campos serão limpos.')) {
+      if (confirm('Finalizar checklist?\n\nTodas as atividades serão salvas no histórico e as abas serão apagadas.')) {
         await appState.startNewDay();
         UI.vibrate();
         UI.renderTabs();
         UI.renderChecklist();
-        this.showToast('Novo dia iniciado!');
+        this.showToast('Checklist finalizado!');
       }
     });
 

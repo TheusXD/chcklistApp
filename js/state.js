@@ -268,6 +268,11 @@ class AppState {
     // Delete the active day checklist from db to prevent duplication
     await db.deleteChecklist(this._checklist.date);
 
+    // Clear all activities (tabs) and custom items
+    await db.clearAllActivities();
+    this._activities = [];
+    this._customItems = {};
+
     // Reset geolocation in memory
     if (window.GeoService) GeoService.reset();
 
