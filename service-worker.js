@@ -1,4 +1,4 @@
-const CACHE_NAME = 'checklist-campo-v8';
+const CACHE_NAME = 'checklist-campo-v9';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -84,10 +84,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // CSS & JS — Cache First
+  // CSS & JS — Network First (always get latest code when online)
   if (request.destination === 'style' || request.destination === 'script' ||
       url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(networkFirst(request));
     return;
   }
 
