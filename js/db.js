@@ -110,6 +110,14 @@ class ChecklistDB {
     return await this.db.photos.delete(id);
   }
 
+  async migratePhotosDate(oldDate, newDate) {
+    const photos = await this.db.photos.where('checklistDate').equals(oldDate).toArray();
+    for (const photo of photos) {
+      photo.checklistDate = newDate;
+      await this.db.photos.put(photo);
+    }
+  }
+
   // ===== SYNC QUEUE =====
 
   async addPendingSync(data) {

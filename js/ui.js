@@ -32,7 +32,15 @@ const UI = {
 
   setActivity(id) {
     this._currentActivity = id;
+    this._cleanThumbUrls();
     this.renderChecklist();
+  },
+
+  _cleanThumbUrls() {
+    for (const url of this._thumbUrls) {
+      URL.revokeObjectURL(url);
+    }
+    this._thumbUrls = [];
   },
 
   // ===== HAPTIC FEEDBACK =====
@@ -455,9 +463,8 @@ const UI = {
     const container = document.getElementById('photos-container');
     if (!container) return;
 
-    // Cleanup old URLs
-    this._thumbUrls.forEach(u => URL.revokeObjectURL(u));
-    this._thumbUrls = [];
+    // Clean old URLs
+    this._cleanThumbUrls();
 
     const photos = await PhotoService.getPhotos(appState.today, this._currentActivity);
     if (photos.length === 0) {

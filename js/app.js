@@ -62,6 +62,8 @@ const App = {
     } catch (e) {
       console.error('[App] Init error:', e);
       document.getElementById('skeleton-loader')?.remove();
+      this.showToast('Erro fatal ao carregar dados locais. Tente limpar o cache.');
+      document.body.innerHTML = '<div style="padding:2rem; text-align:center;"><h2>Erro ao iniciar app</h2><p>Limpe os dados do site e recarregue.</p></div>';
     }
   },
 
@@ -349,7 +351,9 @@ const App = {
           if (worker.state === 'activated') {
             if (!refreshing) {
               refreshing = true;
-              window.location.reload();
+              if (confirm('Nova atualização disponível.\n\nRecarregar o app agora?\n(Checklists não salvos poderão ser perdidos)')) {
+                window.location.reload();
+              }
             }
           }
         });
@@ -378,7 +382,9 @@ const App = {
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!refreshing) {
           refreshing = true;
-          window.location.reload();
+          if (confirm('Nova atualização do sistema aplicada.\n\nRecarregar a página para utilizar a versão mais recente?')) {
+            window.location.reload();
+          }
         }
       });
 

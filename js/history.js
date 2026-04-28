@@ -150,13 +150,15 @@ const HistoryView = {
           </svg>
           Materiais mais usados
         </div>
-        <canvas id="metrics-chart" height="160"></canvas>
+        <canvas id="metrics-chart" height="160" style="width: 100%;"></canvas>
       </div>
     `;
 
-    // Draw bar chart
+    // Draw bar chart after layout is painted
     if (topMaterials.length > 0) {
-      this._drawBarChart(container.querySelector('#metrics-chart'), topMaterials);
+      requestAnimationFrame(() => {
+        this._drawBarChart(container.querySelector('#metrics-chart'), topMaterials);
+      });
     }
   },
 

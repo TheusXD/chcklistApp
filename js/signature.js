@@ -12,13 +12,24 @@ const SignatureService = {
     this._canvas = document.getElementById('signature-canvas');
     if (!this._canvas) return;
     this._ctx = this._canvas.getContext('2d');
-    this._setupCanvas();
+    
+    // Use ResizeObserver for accurate sizing
+    const resizeObserver = new ResizeObserver(() => {
+      this._setupCanvas();
+    });
+    resizeObserver.observe(this._canvas.parentElement || this._canvas);
+    
     this._bindEvents();
   },
 
   _setupCanvas() {
-    // Scale canvas for high DPI
+    // Only resize if dimensions actually exist
     const rect = this._canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    
+    // Save current strokes if resizing (not implemented, but good practice to clear safely)
+    if (this._hasStrokes) return; // Don't wipe if user already drew something
+
     const dpr = window.devicePixelRatio || 1;
     this._canvas.width = rect.width * dpr;
     this._canvas.height = rect.height * dpr;

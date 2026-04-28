@@ -275,6 +275,9 @@ class AppState {
     // Add to sync queue
     await db.addPendingSync(this._checklist);
 
+    // Migrate photos to the archived date before deleting the active checklist
+    await db.migratePhotosDate(this._checklist.date, archiveDate);
+
     // Delete the active day checklist from db to prevent duplication
     await db.deleteChecklist(this._checklist.date);
 

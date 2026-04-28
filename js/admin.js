@@ -4,10 +4,19 @@
  */
 
 const AdminService = {
-  PIN: '1234', // Default admin PIN
+  // Default PIN "1234" hashed with SHA-256
+  PIN_HASH: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
   _authenticated: false,
 
   // ===== AUTH =====
+
+  async _hashPin(pin) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  },
 
   authenticate() {
     return new Promise((resolve) => {
@@ -18,9 +27,9 @@ const AdminService = {
 
       if (!overlay || !input) { resolve(false); return; }
 
-      // Load custom PIN
-      const savedPin = localStorage.getItem('adminPin');
-      if (savedPin) this.PIN = savedPin;
+      // Load custom PIN Hash
+      const savedHash = localStorage.getItem('adminPinHash');
+      if (savedHash) this.PIN_HASH = savedHash;
 
       input.value = '';
       error.classList.add('hidden');
@@ -33,8 +42,9 @@ const AdminService = {
         input.removeEventListener('keydown', onKey);
       };
 
-      const onConfirm = () => {
-        if (input.value === this.PIN) {
+      const onConfirm = async () => {
+        const inputHash = await this._hashPin(input.value);
+        if (inputHash === this.PIN_HASH) {
           this._authenticated = true;
           cleanup();
           resolve(true);
@@ -265,14 +275,15 @@ const AdminService = {
     });
 
     // Change PIN
-    document.getElementById('btn-admin-change-pin')?.addEventListener('click', () => {
+    document.getElementById('btn-admin-change-pin')?.addEventListener('click', async () => {
       const newPin = document.getElementById('input-new-pin')?.value.trim();
       if (!newPin || newPin.length < 4) {
         App.showToast('PIN deve ter no mínimo 4 dígitos');
         return;
       }
-      localStorage.setItem('adminPin', newPin);
-      this.PIN = newPin;
+      const newHash = await this._hashPin(newPin);
+      localStorage.setItem('adminPinHash', newHash);
+      this.PIN_HASH = newHash;
       document.getElementById('input-new-pin').value = '';
       App.showToast('PIN atualizado!');
     });

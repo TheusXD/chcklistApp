@@ -193,7 +193,11 @@ const PdfService = {
     SignatureService.show(async () => {
       const sigData = SignatureService.getDataURL();
       SignatureService.hide();
-      App.showToast('Gerando PDF...');
+      App.showToast('Gerando PDF, aguarde...');
+      
+      // Allow browser to paint the toast before blocking the main thread
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       try {
         await this.exportChecklist(null, sigData);
         App.showToast('PDF gerado!');
