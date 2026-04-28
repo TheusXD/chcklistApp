@@ -524,11 +524,13 @@ const UI = {
       <div class="section-title custom-section-title" style="margin-top:24px">
         ${this.icons.map} Localização
       </div>
-      <div class="form-group" style="margin-bottom:8px;">
+      <div class="form-group" style="margin-bottom:8px; position:relative;">
         <input type="text" id="input-address" class="obs-textarea" 
           placeholder="Ex: Rua das Flores, 123 - Atibaia" 
           value="${this.esc(address)}" 
-          style="padding:12px; font-size:0.95rem;">
+          autocomplete="off"
+          style="padding:12px; font-size:0.95rem; width:100%; box-sizing:border-box;">
+        <div id="address-results" class="autocomplete-results" style="display:none;"></div>
       </div>
       ${geo ? `<div class="geo-info" style="opacity:0.6; font-size:0.75rem;">
         ${this.icons.map}
@@ -537,18 +539,70 @@ const UI = {
         </a>
         <span class="geo-time">${new Date(geo.timestamp).toLocaleTimeString('pt-BR')}</span>
       </div>` : `
-      <button class="btn-geo" id="btn-capture-geo">
+      <button class="btn-geo" id="btn-capture-geo" style="margin-top:8px;">
         ${this.icons.map} Capturar GPS
       </button>`}
     `;
 
-    // Address input
+    // Address input autocomplete
     let debounce = null;
-    document.getElementById('input-address')?.addEventListener('input', (e) => {
+    const input = document.getElementById('input-address');
+    const resultsContainer = document.getElementById('address-results');
+
+    input?.addEventListener('input', (e) => {
+      const val = e.target.value;
+      appState.setAddress(val);
+      
       clearTimeout(debounce);
-      debounce = setTimeout(() => {
-        appState.setAddress(e.target.value);
-      }, 400);
+      if (val.length < 5) {
+        resultsContainer.style.display = 'none';
+        return;
+      }
+      
+      debounce = setTimeout(async () => {
+        try {
+          const params = new URLSearchParams({
+            SingleLine: val,
+            city: 'Atibaia',
+            region: 'SP',
+            countryCode: 'BRA',
+            f: 'json',
+            outSR: '4326',
+            maxLocations: '4'
+          });
+          const res = await fetch('https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?' + params.toString());
+          const data = await res.json();
+          
+          if (data.candidates && data.candidates.length > 0) {
+            resultsContainer.innerHTML = data.candidates.map(c => 
+              `<div class="address-item" data-lat="${c.location.y}" data-lng="${c.location.x}">${this.esc(c.address)}</div>`
+            ).join('');
+            resultsContainer.style.display = 'block';
+            
+            // Add click listeners to items
+            resultsContainer.querySelectorAll('.address-item').forEach(item => {
+              item.addEventListener('click', () => {
+                const selectedAddress = item.textContent;
+                input.value = selectedAddress;
+                appState.setAddress(selectedAddress);
+                appState.setGeo({
+                  lat: parseFloat(item.dataset.lat),
+                  lng: parseFloat(item.dataset.lng),
+                  accuracy: 0,
+                  timestamp: Date.now()
+                });
+                resultsContainer.style.display = 'none';
+                this.renderGeo();
+              });
+            });
+          } else {
+            resultsContainer.style.display = 'none';
+          }
+        } catch (err) {
+          console.warn('Geocoding error:', err);
+          resultsContainer.style.display = 'none';
+        }
+      }, 500);
     });
 
     // Capture GPS button

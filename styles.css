@@ -677,3 +677,5 @@ body {
 .admin-input:focus { outline: none; border-color: var(--clr-primary); }
 
 body.map-active .app-header, body.map-active .tabs-nav { display: none !important; }
+
+.autocomplete-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 4px; z-index: 10; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); } .autocomplete-results div { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; color: #333; font-size: 0.9rem; } .autocomplete-results div:last-child { border-bottom: none; } .autocomplete-results div:hover { background: #f5f5f5; }
