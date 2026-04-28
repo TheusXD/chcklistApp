@@ -247,15 +247,26 @@ const App = {
     formActivity?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const nameInput = document.getElementById('input-activity-name');
+      const depthInput = document.getElementById('input-activity-depth');
+      const escoraInput = document.getElementById('input-activity-escora');
+      
       const name = nameInput.value.trim();
+      const depth = depthInput ? parseFloat(depthInput.value) : 0;
+      const needsEscora = escoraInput ? escoraInput.checked : false;
 
       if (!name) return;
 
       const id = await appState.addActivity(name);
       
-      // Injeção automática dos campos de controle de profundidade
-      await appState.addCustomItem(id, 'Verificar Profundidade no Mapa', '');
-      await appState.addCustomItem(id, 'Levar Escora Metálica / Pranchão?', '');
+      // Salva a profundidade como observação para a equipe ter o registro
+      if (depth > 0) {
+        await appState.addCustomItem(id, 'Profundidade da Rede Verificada no Mapa', `${depth} metros`);
+      }
+      
+      // Salva a escora se foi marcada
+      if (needsEscora) {
+        await appState.addCustomItem(id, 'Escora Metálica / Pranchão', 'Conforme necessidade');
+      }
 
       activityOverlay.classList.remove('active');
       UI.setActivity(id);
@@ -263,6 +274,8 @@ const App = {
       this.showToast('Atividade criada!');
 
       nameInput.value = '';
+      if (depthInput) depthInput.value = '';
+      if (escoraInput) escoraInput.checked = false;
     });
   },
 
