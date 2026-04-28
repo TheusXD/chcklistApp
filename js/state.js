@@ -75,6 +75,7 @@ class AppState {
       items: {},       // { "activityId-materialKey": { checked: false, qty: 0, diameter: '', type: '' } }
       customChecks: {}, // { "custom-itemId": { checked: false, qty: 0 } }
       observations: {}, // { activityId: "text" }
+      address: '',      // endereço digitado pelo usuário
       geo: null         // { lat, lng, timestamp }
     };
   }
@@ -182,6 +183,15 @@ class AppState {
 
   setGeo(geo) {
     this._checklist.geo = geo;
+    this._schedSave();
+  }
+
+  getAddress() {
+    return this._checklist?.address || '';
+  }
+
+  setAddress(address) {
+    this._checklist.address = address;
     this._schedSave();
   }
 

@@ -518,28 +518,45 @@ const UI = {
     if (!container) return;
 
     const geo = GeoService.current;
-    if (geo) {
-      container.innerHTML = `
-        <div class="geo-info">
-          ${this.icons.map}
-          <a href="${GeoService.getMapsUrl(geo)}" target="_blank" rel="noopener">
-            ${GeoService.formatCoords(geo)}
-          </a>
-          <span class="geo-time">${new Date(geo.timestamp).toLocaleTimeString('pt-BR')}</span>
-        </div>
-      `;
-    } else {
-      container.innerHTML = `
-        <button class="btn-geo" id="btn-capture-geo">
-          ${this.icons.map} Capturar localização
-        </button>
-      `;
-      document.getElementById('btn-capture-geo')?.addEventListener('click', async () => {
-        container.innerHTML = '<div class="empty-state">Capturando localização...</div>';
-        await GeoService.capture();
-        this.renderGeo();
-      });
-    }
+    const address = appState.getAddress();
+
+    container.innerHTML = `
+      <div class="section-title custom-section-title" style="margin-top:24px">
+        ${this.icons.map} Localização
+      </div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <input type="text" id="input-address" class="obs-textarea" 
+          placeholder="Ex: Rua das Flores, 123 - Atibaia" 
+          value="${this.esc(address)}" 
+          style="padding:12px; font-size:0.95rem;">
+      </div>
+      ${geo ? `<div class="geo-info" style="opacity:0.6; font-size:0.75rem;">
+        ${this.icons.map}
+        <a href="${GeoService.getMapsUrl(geo)}" target="_blank" rel="noopener">
+          GPS: ${GeoService.formatCoords(geo)}
+        </a>
+        <span class="geo-time">${new Date(geo.timestamp).toLocaleTimeString('pt-BR')}</span>
+      </div>` : `
+      <button class="btn-geo" id="btn-capture-geo">
+        ${this.icons.map} Capturar GPS
+      </button>`}
+    `;
+
+    // Address input
+    let debounce = null;
+    document.getElementById('input-address')?.addEventListener('input', (e) => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        appState.setAddress(e.target.value);
+      }, 400);
+    });
+
+    // Capture GPS button
+    document.getElementById('btn-capture-geo')?.addEventListener('click', async () => {
+      container.querySelector('#btn-capture-geo').textContent = 'Capturando...';
+      await GeoService.capture();
+      this.renderGeo();
+    });
   },
 
   // ===== MODALS =====

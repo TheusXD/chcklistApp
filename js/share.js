@@ -17,9 +17,13 @@ const ShareService = {
       text += `👥 Equipe: ${ck.teamName}\n`;
     }
 
-    // Geo
-    if (ck.geo) {
-      text += `📍 ${GeoService.formatCoords(ck.geo)}\n`;
+    // Address + Geo
+    const address = ck.address || '';
+    if (address) {
+      const mapsSearch = `https://www.google.com/maps/search/${encodeURIComponent(address)}`;
+      text += `📍 ${address}\n🗺️ ${mapsSearch}\n`;
+    } else if (ck.geo) {
+      text += `📍 ${GeoService.formatCoords(ck.geo)}\n🗺️ ${GeoService.getMapsUrl(ck.geo)}\n`;
     }
 
     // Progress
