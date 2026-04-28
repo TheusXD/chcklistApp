@@ -423,7 +423,11 @@ const UI = {
       let startX = 0, currentX = 0, swiping = false;
 
       card.addEventListener('touchstart', (e) => {
+        // Ignora toques em botões interativos
+        if (e.target.closest('button, input, .qty-btn, .check-btn')) return;
+        
         startX = e.touches[0].clientX;
+        currentX = startX; // Inicializa currentX com startX para evitar pulos
         swiping = true;
         card.style.transition = 'none';
       }, { passive: true });
@@ -440,8 +444,10 @@ const UI = {
       card.addEventListener('touchend', async () => {
         if (!swiping) return;
         swiping = false;
+        
         const dx = currentX - startX;
         card.style.transition = 'transform 0.3s ease';
+        
         if (dx < -80) {
           const id = parseInt(card.dataset.customId);
           card.style.transform = 'translateX(-120%)';
