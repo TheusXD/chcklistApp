@@ -1,4 +1,4 @@
-const CACHE_NAME = 'checklist-campo-v9';
+const CACHE_NAME = 'checklist-campo-v10';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -29,6 +29,7 @@ const CDN_ASSETS = [
 
 // Install — pre-cache static assets (critical) + CDN assets (optional)
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // FORCE UPDATE IMMEDIATELY
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       // Static assets are critical — must all succeed
@@ -47,7 +48,7 @@ self.addEventListener('install', (event) => {
       if (failed.length > 0) {
         console.warn('[SW] CDN assets não cacheados:', failed.length);
       }
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
