@@ -265,7 +265,7 @@ const App = {
       
       // Salva a escora se foi marcada
       if (needsEscora) {
-        await appState.addCustomItem(id, 'Escora Metálica / Pranchão', 'Conforme necessidade');
+        await appState.addCustomItem(id, 'Escora', 'Conforme necessidade');
       }
 
       activityOverlay.classList.remove('active');
